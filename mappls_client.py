@@ -1,9 +1,15 @@
+
 import math
 import json
+import os
 
 class MapplsGeospace:
-    def __init__(self, config_path='SmartUAV_RiskAssessmen\config.json'):
-        with open(config_path) as f:
+    def __init__(self, config_path='config.json'):
+        # Ensure path is absolute relative to this file
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(base_path, config_path)
+        
+        with open(full_path) as f:
             self.config = json.load(f)
         
         # Load simulated zones

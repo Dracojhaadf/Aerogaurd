@@ -1,26 +1,34 @@
+
 def calculate_risk_index(sensor_data, zone):
-    # Base weights
+    """
+    Inputs:
+    sensor_data: Dict with 'mpu' and 'motor' structures
+    zone: "RED", "YELLOW", or "GREEN"
+    """
     score = 0
     reasons = []
 
     # 1. Geospace Penalty (Hard Rule)
     if zone == "RED":
-        return 100, "CRITICAL: Restricted Airspace"
+        return 100, "CRITICAL: Restricted Airspace", "DANGER"
     elif zone == "YELLOW":
         score += 30
-        reasons.append("Caution: Near Airport")
+        reasons.append("Near Airport")
 
     # 2. Hardware Penalty
-    if sensor_data.get('vib', 0) > 3.0:
+    vib = sensor_data.get('mpu', {}).get('vibration_rms', 0)
+    if vib > 0.3: # Increased threshold for G-force units
         score += 40
         reasons.append("High Vibration")
     
-    if sensor_data.get('hall', 1000) < 400:
+    rpm = sensor_data.get('motor', {}).get('rpm', 1000)
+    if rpm < 400 and rpm > 0: # Check only if running
         score += 30
-        reasons.append("Motor Efficiency Low")
+        reasons.append("Low Motor Efficiency")
 
     # Final logic
-    score = min(score, 100) # Cap at 100
+    score = min(score, 100)
     recommendation = "SAFE" if score < 40 else "CAUTION" if score < 75 else "ABORT"
     
-    return score, f"{recommendation}: {', '.join(reasons)}"
+    reason_str = ", ".join(reasons) if reasons else "Systems Nominal"
+    return score, f"{recommendation}: {reason_str}", recommendation
